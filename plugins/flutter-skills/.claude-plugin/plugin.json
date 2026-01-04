@@ -1,0 +1,19 @@
+{
+  "name": "flutter-skills",
+  "description": "Comprehensive Flutter/Dart code quality tools including intelligent code review and automated formatting",
+  "version": "1.0.0",
+  "author": {
+    "name": "Lucas Xu",
+    "url": "https://github.com/LucasXu0"
+  },
+  "homepage": "https://github.com/LucasXu0/claude-code-plugin",
+  "repository": "https://github.com/LucasXu0/claude-code-plugin",
+  "license": "MIT",
+  "keywords": [
+    "flutter",
+    "dart",
+    "code-review",
+    "formatting",
+    "quality"
+  ]
+}
