@@ -15,159 +15,164 @@ Issues that cause crashes, data loss, or security vulnerabilities.
 
 #### Null Safety Violations
 
-**Pattern: Force Unwrap Without Checks**
-- Code: variable!, expression!.property, function()!
-- Risk: Null check operator used on a null value runtime crash
-- When acceptable: Immediately after explicit null check
-- Fix: Use ?., ??, explicit null checks, or pattern matching
+**Force Unwrap Without Checks** (variable!, expression!.property)
+- Risk: Runtime crash with "Null check operator used on a null value"
+- Fix: Use ?. or ?? operators, explicit null checks, or pattern matching
+- → Details: reference.md#avoid_non_null_assertion
 
-**Pattern: Unsafe Nullable Access**
-- Code: Accessing nullable properties without checks
-- Risk: Null pointer exceptions
-- Fix: Check nullability before access
+**Unsafe Nullable Access**
+- Risk: Null pointer exceptions when accessing properties without checks
+- Fix: Add null checks before property access
+- → Details: reference.md#missing_null_safety
 
-**Pattern: Unsafe Type Casts**
-- Code: value as Type without is check
+**Unsafe Type Casts** (value as Type)
 - Risk: Type cast errors at runtime
-- Fix: Use pattern matching or check with is first
+- Fix: Use pattern matching or check with is operator first
+- → Details: reference.md#unsafe_type_casts
 
 #### Flutter Lifecycle Issues
 
-**Pattern: setState Without Mounted Check**
-- Code: setState() called in async callbacks without checking mounted
-- Risk: setState() called after dispose() errors and crashes
-- Detection: Look for async functions calling setState
+**setState Without Mounted Check**
+- Risk: setState() called after dispose() crashes app
 - Fix: Add if (!mounted) return; before setState in async callbacks
+- → Details: reference.md#avoid_mounted_in_setstate
 
-**Pattern: State Modifications After Disposal**
-- Code: Updating state variables after widget disposed
+**State Modifications After Disposal**
 - Risk: Memory leaks and unexpected behavior
 - Fix: Check mounted or cancel operations in dispose
+- → Details: reference.md#state_after_disposal
 
 #### Memory Leaks
 
 **Resources That Must Be Disposed:**
-- TextEditingController
-- AnimationController
-- ScrollController
-- TabController
-- PageController
-- FocusNode
-- StreamSubscription
-- Timer
-- Any class where addListener() was called
+TextEditingController, AnimationController, ScrollController, TabController, PageController, FocusNode, StreamSubscription, Timer, any class with addListener() called
 
-**Detection Pattern:**
-- Look for controller/subscription creation in class fields or initState
-- Verify corresponding dispose() call exists
-- Even if dispose exists, check ALL resources are disposed
-
-**Important:** If code adds new controllers/streams, must verify disposal even if dispose method already exists but unchanged.
+**Detection:** Check if controllers/subscriptions created in fields or initState have corresponding dispose() calls. Verify ALL resources disposed, not just presence of dispose method.
+- → Details: reference.md#dispose_class_fields
 
 #### Logic Errors
 
-**Incorrect Conditional Logic:**
-- || vs && confusion causing always-true/false conditions
-- Missing null checks in compound conditions
-- Negation errors
+**Incorrect Conditional Logic**
+- || vs && confusion, missing null checks in compounds, negation errors
+- → Details: reference.md#logic_errors_conditionals
 
-**Missing Error Handling:**
-- API calls without try-catch
-- File operations without error handling
-- JSON parsing without validation
-- Network requests without timeout or error cases
+**Missing Error Handling**
+- API calls, file operations, JSON parsing without try-catch
+- → Details: reference.md#missing_error_handling
 
-**Infinite Loops:**
-- While loops without termination condition
-- Loops where condition variable never changes
-- Recursion without base case
+**Infinite Loops**
+- Loops without termination or where condition never changes
+- → Details: reference.md#infinite_loops
 
-**Race Conditions:**
-- Multiple async operations modifying same state
-- Concurrent access to shared resources
-- Missing state guards for async flows
+**Race Conditions**
+- Multiple async operations modifying same state without guards
+- → Details: reference.md#race_conditions
+
+---
 
 ### P1 - Important (Should Fix)
 
 Issues causing logic bugs and maintainability problems.
 
-#### Collection Equality Issues
+#### Collection Equality
 
-**Pattern: Using == on Collections**
-- Code: list1 == list2, map1 == map2, set1 == set2
-- Problem: Dart uses reference equality, not deep equality
-- Result: Always false even with identical contents
-- Fix: Use package:collection - ListEquality().equals(), MapEquality().equals(), DeepCollectionEquality().equals()
-- Exception: const collections (same instance, comparison works)
+**Using == on Collections** (list1 == list2, map1 == map2)
+- Problem: Dart uses reference equality, always false for different instances
+- Fix: Use package:collection - ListEquality().equals(), MapEquality().equals(), or DeepCollectionEquality().equals()
+- Exception: const collections (same instance)
+- → Details: reference.md#avoid_collection_equality_checks
 
 #### Code Complexity
 
-**Deep Nesting (>4 levels):**
+**Deep Nesting** (>4 levels)
 - Problem: Reduces readability, increases cognitive load
-- Fix: Extract nested logic to methods, use early returns, combine conditions with guard clauses
+- Fix: Extract methods, use early returns, guard clauses
+- → Details: reference.md#deep_nesting
 
-**Long Methods (>100 lines):**
+**Long Methods** (>100 lines)
 - Problem: Violates Single Responsibility Principle
-- Fix: Break into smaller, focused methods with clear names
+- Fix: Break into smaller focused methods
+- → Details: reference.md#long_methods
+
+**Long Build Methods** (>50 lines)
+- Problem: Too much UI logic in build method, hard to maintain
+- Fix: Extract to buildWidget helpers (buildHeader, buildBody) or create separate widget files
+- → Details: reference.md#long_build_methods
+
+#### Widget Organization
+
+**Multiple Widget Definitions Per File**
+- Problem: Reduces code organization and reusability
+- Fix: Each widget class in its own file (e.g., UserCard in user_card.dart)
+- Exception: Small private helper widgets within parent widget
+- → Details: reference.md#multiple_widgets_per_file
+
+#### Late Modifier Usage
+
+**Avoid Late Keyword**
+- Risk: Defers initialization to runtime, can cause LateInitializationError
+- Fix: Initialize in constructor, use nullable types, or required parameters
+- Exception: DI frameworks with guaranteed initialization
+- → Details: reference.md#avoid_late_keyword
 
 #### Bloc Anti-Patterns
 
 **Only check when flutter_bloc or bloc in dependencies.**
 
-**Public Fields in BLoC:**
-- Pattern: Non-private fields in Bloc classes
+**Public Fields in BLoC**
 - Problem: Breaks encapsulation, allows external state modification
 - Fix: Make fields private, expose through state
+- → Details: reference.md#bloc_public_fields
 
-**Public Methods in BLoC:**
-- Pattern: Public methods that modify state
+**Public Methods in BLoC**
 - Problem: BLoCs should only respond to events
 - Fix: Create events and use add() instead
+- → Details: reference.md#bloc_public_methods
 
-**Mutable Events:**
-- Pattern: Event classes without @immutable, mutable fields
+**Mutable Events**
 - Problem: Events should be immutable data
 - Fix: Add @immutable, make fields final, use const constructors
+- → Details: reference.md#bloc_mutable_events
 
-**Non-Sealed States:**
-- Pattern: State classes not using sealed or final
+**Non-Sealed States**
 - Problem: Can't exhaustively pattern match
 - Fix: Use sealed class for state base, final class for implementations
+- → Details: reference.md#bloc_non_sealed_states
 
 #### Provider Anti-Patterns
 
 **Only check when provider in dependencies.**
 
-**context.read() in Build:**
-- Pattern: context.read<Provider>() in build method
+**context.read() in Build**
 - Problem: Won't rebuild when provider changes
-- Fix: Use context.watch<Provider>() for reactive data
+- Fix: Use context.watch() for reactive data
+- → Details: reference.md#provider_read_in_build
 
-**Old Provider Syntax:**
-- Pattern: Provider.of<Type>(context, listen: true)
+**Old Provider Syntax** (Provider.of<Type>(context, listen: true))
 - Problem: Outdated, less readable
-- Fix: Use context.watch<Type>() or context.read<Type>()
+- Fix: Use context.watch() or context.read()
+- → Details: reference.md#provider_old_syntax
 
-**Missing Disposal in ChangeNotifier:**
-- Pattern: ChangeNotifier with controllers/subscriptions but no dispose
-- Problem: Memory leaks
-- Fix: Override dispose() and clean up resources
+**Missing Disposal in ChangeNotifier**
+- Problem: Memory leaks from undisposed resources
+- Fix: Override dispose() and clean up all resources
+- → Details: reference.md#provider_missing_disposal
 
 #### Logic Issues
 
-**Incorrect Operators:**
-- Using = instead of == in conditions
-- Comparing incompatible types
-- Wrong comparison operators
+**Incorrect Operators**
+- Using = instead of == in conditions, comparing incompatible types
+- → Details: reference.md#incorrect_operators
 
-**Missing Edge Cases:**
-- No empty collection checks before .first, .last
-- No bounds checking for indices
-- Missing null/empty string validation
+**Missing Edge Cases**
+- No empty collection checks before .first/.last, no bounds checking
+- → Details: reference.md#missing_edge_cases
 
-**Off-By-One Errors:**
+**Off-By-One Errors**
 - Loop conditions with <= instead of < for length
-- Index calculations off by one
+- → Details: reference.md#off_by_one_errors
+
+---
 
 ### P2 - Code Quality (Nice to Have)
 
@@ -175,29 +180,33 @@ Improvements for maintainability.
 
 #### Magic Numbers
 
-**Pattern: Hardcoded Numbers Without Context**
-- Example: if (status == 3), Timer(Duration(seconds: 3600))
-- Exceptions: 0, 1, -1, and obvious widget dimensions (e.g., padding: 16)
-- Fix: Define as named constants with descriptive names
+**Hardcoded Numbers Without Context**
+- Exceptions: 0, 1, -1, obvious widget dimensions (padding: 16)
+- Fix: Define as named constants
+- → Details: reference.md#magic_numbers
 
 #### TODO/FIXME Comments
 
-**Pattern: Markers for Incomplete Work**
-- Comments: // TODO:, // FIXME:, // HACK:
-- Significance: Indicates areas needing attention before merge
-- Action: Track and address or convert to issues
+**Markers for Incomplete Work**
+- Patterns: // TODO:, // FIXME:, // HACK:
+- Action: Track and address before merge
+- → Details: reference.md#todo_comments
 
 #### Long Classes (>500 lines)
 
-**Pattern: Classes Exceeding 500 Lines**
-- Problem: Violates Single Responsibility
-- Fix: Split into multiple classes, extract logic to mixins/utilities
+**Classes Exceeding 500 Lines**
+- Problem: Violates Single Responsibility, may contain dead code
+- Fix: Split into multiple classes, extract to mixins/utilities
+- Action: Review for unused methods, commented code, duplicate logic
+- → Details: reference.md#long_classes
 
 #### Moderate Nesting (3-4 levels)
 
-**Pattern: Nesting Depth of 3-4**
-- Not critical but consider simplification for readability
-- Suggest refactoring if complexity impacts understanding
+**Nesting Depth 3-4**
+- Consider simplification for readability
+- → Details: reference.md#moderate_nesting
+
+---
 
 ## Dependency-Specific Knowledge
 
@@ -212,26 +221,7 @@ Improvements for maintainability.
 - No public fields (only private state)
 - UI never contains business logic
 
-**State Pattern:**
-```dart
-sealed class UserState {}
-final class UserInitial extends UserState {}
-final class UserLoading extends UserState {}
-final class UserLoaded extends UserState {
-  final User user;
-  UserLoaded(this.user);
-}
-```
-
-**Event Pattern:**
-```dart
-@immutable
-sealed class UserEvent {}
-final class LoadUser extends UserEvent {
-  final String userId;
-  const LoadUser(this.userId);
-}
-```
+→ See reference.md#bloc_pattern for state/event patterns
 
 ### Provider Pattern Detection
 
@@ -240,27 +230,19 @@ final class LoadUser extends UserEvent {
 **Key Principles:**
 - Use context.watch() for reactive rebuilds
 - Use context.read() only for one-time reads (not in build)
-- Use context.select() for performance (rebuild only on specific changes)
+- Use context.select() for performance optimization
 - Always dispose resources in ChangeNotifier
 
-**Good Patterns:**
-```dart
-// Reactive - rebuilds
-final count = context.watch<Counter>().value;
+→ See reference.md#provider_pattern for usage patterns
 
-// One-time read - doesn't rebuild
-onPressed: () => context.read<Counter>().increment()
-
-// Selective - rebuilds only when name changes
-final name = context.select((User user) => user.name);
-```
+---
 
 ## Context Awareness
 
 ### When NOT to Flag
 
 **Test Files:**
-- More lenient with some patterns (e.g., force unwraps in test setup)
+- More lenient with force unwraps in test setup
 - Focus on logic errors, not style
 
 **Generated Code:**
@@ -270,7 +252,7 @@ final name = context.select((User user) => user.name);
 **Intentional Patterns:**
 - Null check immediately before force unwrap
 - Type check before cast
-- Controlled environments (e.g., after validation)
+- Controlled environments after validation
 
 ### When TO Flag Even If...
 
@@ -283,25 +265,27 @@ final name = context.select((User user) => user.name);
 - Flag potential issues even if not currently crashing
 
 **Dispose exists but incomplete:**
-- If new controllers added but not added to dispose
+- If new controllers added but not in dispose
 - Check ALL resources, not just presence of dispose method
 
-## Review Output Knowledge
+---
+
+## Review Output Format
 
 ### Report Structure
 
-**Summary Section:**
-- Count by priority (P0/P1/P2)
-- Clear status (Pass/Must Fix/Recommended)
-- Overall recommendation (Block/Review Needed/Approved)
+**Summary:**
+- Count by priority (P0: X, P1: Y, P2: Z)
+- Clear status (Pass / Must Fix / Recommended)
+- Overall recommendation (🔴 BLOCK / 🟡 REVIEW NEEDED / 🟢 APPROVED)
 
 **Issue Format:**
-- File path and line number
-- Issue type/category
+- File path:line_number
+- Issue type and priority
 - Problem explanation
 - Current code snippet (with context)
 - Fixed code snippet
-- Benefit of fix (in brief)
+- Benefit of fix
 
 **Organization:**
 - P0 first (most critical)
@@ -311,50 +295,47 @@ final name = context.select((User user) => user.name);
 
 ### Recommendation Guidelines
 
-**🔴 BLOCK:**
-- Any P0 issues present
-- Must fix before merge
+🔴 **BLOCK** - Any P0 issues present (must fix before merge)
+🟡 **REVIEW NEEDED** - No P0, but P1 issues present (should fix)
+🟢 **APPROVED** - No P0 or P1, only P2 optional improvements
 
-**🟡 REVIEW NEEDED:**
-- No P0, but P1 issues present
-- Should fix, but not blocking
-
-**🟢 APPROVED:**
-- No P0 or P1 issues
-- P2 optional improvements only
+---
 
 ## Analysis Efficiency
 
 **Focus on Changed Code:**
-- Analyze additions and modifications (marked with + in diff)
+- Analyze additions and modifications (+ in diff)
 - Use surrounding context from diff
 - Don't review entire codebase
 
 **Selective Deep Dives:**
-- Read full files only when:
-  - Diff context insufficient
-  - Need to verify disposal (new controllers/streams added)
-  - Need class structure or imports
+Read full files only when:
+- Diff context insufficient
+- Need to verify disposal (new controllers/streams added)
+- Need class structure or imports
 
 **File Type Guides Analysis:**
-- **Widgets**: Lifecycle, mounted, dispose
-- **BLoCs**: Encapsulation, events, states
-- **Providers**: Disposal, context usage
-- **Models**: Immutability, equality
-- **Services**: Error handling, async patterns
+- Widgets: Lifecycle, mounted, dispose
+- BLoCs: Encapsulation, events, states
+- Providers: Disposal, context usage
+- Models: Immutability, equality
+- Services: Error handling, async patterns
+
+---
 
 ## Key Principles
 
-1. **Safety First**: P0 issues can crash apps - prioritize these
-2. **Be Specific**: Always provide file:line, code snippets, fixes
-3. **Avoid False Positives**: When uncertain, don't flag or mark P2
-4. **Context Matters**: Understand intent before flagging
-5. **Actionable Feedback**: Every issue needs clear, copy-paste ready fix
-6. **Respect Patterns**: Understand project's architecture before suggesting changes
+1. **Safety First** - P0 issues can crash apps, prioritize these
+2. **Be Specific** - Always provide file:line, code snippets, fixes
+3. **Avoid False Positives** - When uncertain, don't flag or mark P2
+4. **Context Matters** - Understand intent before flagging
+5. **Actionable Feedback** - Every issue needs clear, copy-paste ready fix
+6. **Respect Patterns** - Understand project architecture before suggesting changes
+
+---
 
 ## Additional Resources
 
 For detailed explanations of each check, see [reference.md](reference.md).
 
 For code examples showing good vs bad patterns, see [examples.md](examples.md).
-
