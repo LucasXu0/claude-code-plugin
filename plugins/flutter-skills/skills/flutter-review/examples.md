@@ -634,7 +634,587 @@ Widget buildUserProfile(User? user) {
 
 ---
 
-### 3. Bloc Anti-patterns
+### 3. Long Build Methods
+
+#### ❌ Bad Examples
+
+```dart
+// Example 1: 60-line build method with complex UI
+class UserProfilePage extends StatelessWidget {
+  final User user;
+
+  const UserProfilePage(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(user.name),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header section (15 lines)
+            Container(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundImage: NetworkImage(user.avatar),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(user.name, style: TextStyle(fontSize: 24)),
+                        Text(user.email, style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Divider(),
+            // Stats section (15 lines)
+            Container(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      Text('${user.posts}', style: TextStyle(fontSize: 20)),
+                      Text('Posts'),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Text('${user.followers}', style: TextStyle(fontSize: 20)),
+                      Text('Followers'),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Text('${user.following}', style: TextStyle(fontSize: 20)),
+                      Text('Following'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Bio section (10 lines)
+            Container(
+              padding: EdgeInsets.all(16),
+              child: Text(user.bio),
+            ),
+            // Posts grid (20+ lines)
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 4,
+                mainAxisSpacing: 4,
+              ),
+              itemCount: user.posts.length,
+              itemBuilder: (context, index) {
+                return Image.network(
+                  user.posts[index].imageUrl,
+                  fit: BoxFit.cover,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+#### ✅ Good Examples
+
+```dart
+// Example 1: Extract to private build methods
+class UserProfilePage extends StatelessWidget {
+  final User user;
+
+  const UserProfilePage(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(user.name),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildHeader(),
+            Divider(),
+            _buildStats(),
+            _buildBio(),
+            _buildPostsGrid(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 40,
+            backgroundImage: NetworkImage(user.avatar),
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(user.name, style: TextStyle(fontSize: 24)),
+                Text(user.email, style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStats() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatColumn('${user.posts}', 'Posts'),
+          _buildStatColumn('${user.followers}', 'Followers'),
+          _buildStatColumn('${user.following}', 'Following'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatColumn(String value, String label) {
+    return Column(
+      children: [
+        Text(value, style: TextStyle(fontSize: 20)),
+        Text(label),
+      ],
+    );
+  }
+
+  Widget _buildBio() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      child: Text(user.bio),
+    );
+  }
+
+  Widget _buildPostsGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+      ),
+      itemCount: user.posts.length,
+      itemBuilder: (context, index) {
+        return Image.network(
+          user.posts[index].imageUrl,
+          fit: BoxFit.cover,
+        );
+      },
+    );
+  }
+}
+
+// Example 2: Extract to separate widget files
+class UserProfilePage extends StatelessWidget {
+  final User user;
+
+  const UserProfilePage(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(user.name),
+        actions: [SettingsButton()],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            UserProfileHeader(user),       // Separate file
+            Divider(),
+            UserStatsSection(user),        // Separate file
+            UserBioSection(user),          // Separate file
+            UserPostsGrid(user.posts),     // Separate file
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+---
+
+### 4. Multiple Widgets Per File
+
+#### ❌ Bad Examples
+
+```dart
+// user_profile.dart - BAD: Multiple widgets in one file
+class UserProfile extends StatelessWidget {
+  final User user;
+
+  const UserProfile(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        UserCard(user),        // Should be in user_card.dart
+        UserAvatar(user),      // Should be in user_avatar.dart
+        UserBio(user),         // Should be in user_bio.dart
+      ],
+    );
+  }
+}
+
+// BAD: Public widget in same file
+class UserCard extends StatelessWidget {
+  final User user;
+
+  const UserCard(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        title: Text(user.name),
+        subtitle: Text(user.email),
+      ),
+    );
+  }
+}
+
+// BAD: Another public widget
+class UserAvatar extends StatelessWidget {
+  final User user;
+
+  const UserAvatar(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      backgroundImage: NetworkImage(user.avatar),
+    );
+  }
+}
+
+// BAD: Yet another public widget
+class UserBio extends StatelessWidget {
+  final User user;
+
+  const UserBio(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(user.bio);
+  }
+}
+```
+
+#### ✅ Good Examples
+
+```dart
+// user_profile.dart - GOOD: One main widget per file
+class UserProfile extends StatelessWidget {
+  final User user;
+
+  const UserProfile(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        UserCard(user),        // Imported from user_card.dart
+        UserAvatar(user),      // Imported from user_avatar.dart
+        UserBio(user),         // Imported from user_bio.dart
+      ],
+    );
+  }
+}
+
+// GOOD: Private helper widget in same file
+class _ProfileHeader extends StatelessWidget {
+  final User user;
+
+  const _ProfileHeader(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.person),
+        Text(user.name),
+      ],
+    );
+  }
+}
+
+// user_card.dart - GOOD: Separate file for UserCard
+class UserCard extends StatelessWidget {
+  final User user;
+
+  const UserCard(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        title: Text(user.name),
+        subtitle: Text(user.email),
+      ),
+    );
+  }
+}
+
+// user_avatar.dart - GOOD: Separate file for UserAvatar
+class UserAvatar extends StatelessWidget {
+  final User user;
+
+  const UserAvatar(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      backgroundImage: NetworkImage(user.avatar),
+    );
+  }
+}
+
+// user_bio.dart - GOOD: Separate file for UserBio
+class UserBio extends StatelessWidget {
+  final User user;
+
+  const UserBio(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(16),
+      child: Text(user.bio),
+    );
+  }
+}
+```
+
+---
+
+### 5. Avoid Late Keyword
+
+#### ❌ Bad Examples
+
+```dart
+// Example 1: Late without initialization
+class UserProfileScreen extends StatefulWidget {
+  @override
+  State<UserProfileScreen> createState() => _UserProfileScreenState();
+}
+
+class _UserProfileScreenState extends State<UserProfileScreen> {
+  late String userName;              // BAD: No initialization
+  late int userAge;                  // BAD: Crash if accessed before init
+  late TextEditingController controller;  // BAD: Memory leak risk
+
+  @override
+  void initState() {
+    super.initState();
+    // Forgot to initialize userName and userAge!
+    controller = TextEditingController();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(userName);  // LateInitializationError!
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+}
+
+// Example 2: Late in class fields
+class UserService {
+  late final ApiClient apiClient;   // BAD: Runtime check
+  late Database db;                  // BAD: Might forget to initialize
+
+  void initialize() {
+    apiClient = ApiClient();
+    // Forgot to initialize db!
+  }
+
+  Future<User> getUser() async {
+    return apiClient.get('/user');
+    // If we use db here before initialize(), crash!
+  }
+}
+
+// Example 3: Complex late initialization
+class ConfigManager {
+  late Map<String, dynamic> config;  // BAD: Complex init logic
+
+  Future<void> loadConfig() async {
+    try {
+      config = await loadFromFile();
+    } catch (e) {
+      // If loading fails, config never initialized!
+    }
+  }
+
+  String getConfigValue(String key) {
+    return config[key];  // Crash if loadConfig failed
+  }
+}
+```
+
+#### ✅ Good Examples
+
+```dart
+// Example 1: Constructor initialization
+class _UserProfileScreenState extends State<UserProfileScreen> {
+  String userName = '';              // GOOD: Default value
+  int userAge = 0;                   // GOOD: Default value
+  final TextEditingController controller = TextEditingController();  // GOOD: Immediate init
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = await fetchUser();
+    setState(() {
+      userName = user.name;
+      userAge = user.age;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(userName);  // Safe, always initialized
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+}
+
+// Example 2: Nullable with null checks
+class _UserProfileScreenState extends State<UserProfileScreen> {
+  String? userName;                  // GOOD: Nullable
+  int? userAge;                      // GOOD: Nullable
+  TextEditingController? controller; // GOOD: Nullable
+
+  @override
+  void initState() {
+    super.initState();
+    controller = TextEditingController();
+    _loadUserData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(userName ?? 'Loading...');  // GOOD: Null check
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+}
+
+// Example 3: Required parameters
+class UserService {
+  final ApiClient apiClient;         // GOOD: Required in constructor
+  final Database db;                 // GOOD: Required in constructor
+
+  UserService({
+    required this.apiClient,
+    required this.db,
+  });
+
+  Future<User> getUser() async {
+    return apiClient.get('/user');   // Safe, always initialized
+  }
+}
+
+// Example 4: Acceptable late use with DI
+class UserRepository {
+  late final Database db;  // OK: GetIt guarantees initialization
+
+  @injectable
+  UserRepository() {
+    db = GetIt.instance<Database>();  // Framework guarantees this runs first
+  }
+
+  Future<User> getUser(String id) async {
+    return db.query('users', where: 'id = ?', args: [id]);
+  }
+}
+
+// Example 5: Lazy initialization with nullable
+class ConfigManager {
+  Map<String, dynamic>? _config;     // GOOD: Nullable
+
+  Future<void> loadConfig() async {
+    try {
+      _config = await loadFromFile();
+    } catch (e) {
+      _config = {};  // Fallback to empty map
+    }
+  }
+
+  String? getConfigValue(String key) {
+    return _config?[key];  // GOOD: Safe access
+  }
+
+  bool get isLoaded => _config != null;
+}
+```
+
+---
+
+### 6. Bloc Anti-patterns
 
 #### ❌ Bad Examples
 
