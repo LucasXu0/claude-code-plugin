@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-01-04
+
+### Changed
+- **BREAKING**: Restructured knowledge architecture for better maintainability
+- SKILL.md now uses compact format with cross-references to reference.md
+- Reduced SKILL.md from 384 to 341 lines (11% reduction)
+- All check descriptions now include anchor links to detailed documentation
+
+### Added
+- Comprehensive anchor IDs in reference.md for all checks
+- Detailed pattern explanations for Bloc and Provider in reference.md
+- Complete code examples for all new P1 checks in examples.md
+- Cross-file referencing system between SKILL.md, reference.md, and examples.md
+
+### Improved
+- Reduced content duplication across skill files
+- Better separation of concerns: skill (compact) vs reference (detailed) vs examples (code)
+- Enhanced Long Classes check with dead code detection methodology
+- Progressive disclosure: SKILL → reference → examples workflow
+
+## [1.1.0] - 2026-01-04
+
+### Added
+- P1 check for multiple widget definitions in same file
+- P1 check to avoid late keyword usage (runtime safety)
+- P1 check for long build methods (>50 lines) in widgets
+- Enhanced P2 long class check to identify useless/dead code
+
 ## [1.0.0] - 2026-01-04
 
 ### Added
