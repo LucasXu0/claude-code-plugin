@@ -113,15 +113,15 @@ mkdir -p /tmp/flutter_review
 ```
 
 **Generate filename:**
-Pattern: `YYYYMMDD_HHmm-{repo-name}-{branch-name}-{6-char-random-id}.md`
-Example: `20260104_1430-my_app-feature_login-a3f9d2.md`
+Pattern: YYYYMMDD_HHmm-{repo-name}-{branch-name}-{6-char-random-id}.md
+Example: 20260104_1430-my_app-feature_login-a3f9d2.md
 
 **Report structure:**
 ```markdown
 # Flutter Code Review
 
 **Repository**: {repo-name}
-**Branch**: `{branch-name}` | **Files**: {X} | **Lines**: +{added}/-{removed}
+**Branch**: {branch-name} | **Files**: {X} | **Lines**: +{added}/-{removed}
 **Reviewed**: {YYYY-MM-DD HH:mm:ss}
 **Base**: origin/main | **Review ID**: {random-id}
 **Packages**: {bloc/provider/none}
@@ -158,12 +158,9 @@ Example: `20260104_1430-my_app-feature_login-a3f9d2.md`
 ```
 
 **Display to user:**
-```
-✅ Review complete! Results saved to:
-   /tmp/flutter_review/{filename}.md
-
-💡 Would you like me to fix these issues automatically?
-```
+Show the user a message like:
+- Review complete! Results saved to: /tmp/flutter_review/{filename}.md
+- Would you like me to fix these issues automatically?
 
 ### 6. Offer to Fix Issues
 
