@@ -16,10 +16,10 @@ Issues that cause crashes, data loss, or security vulnerabilities.
 #### Null Safety Violations
 
 **Pattern: Force Unwrap Without Checks**
-- Code: `variable!`, `expression!.property`, `function()!`
-- Risk: `Null check operator used on a null value` runtime crash
+- Code: variable!, expression!.property, function()!
+- Risk: Null check operator used on a null value runtime crash
 - When acceptable: Immediately after explicit null check
-- Fix: Use `?.`, `??`, explicit null checks, or pattern matching
+- Fix: Use ?., ??, explicit null checks, or pattern matching
 
 **Pattern: Unsafe Nullable Access**
 - Code: Accessing nullable properties without checks
@@ -27,47 +27,47 @@ Issues that cause crashes, data loss, or security vulnerabilities.
 - Fix: Check nullability before access
 
 **Pattern: Unsafe Type Casts**
-- Code: `value as Type` without `is` check
+- Code: value as Type without is check
 - Risk: Type cast errors at runtime
-- Fix: Use pattern matching or check with `is` first
+- Fix: Use pattern matching or check with is first
 
 #### Flutter Lifecycle Issues
 
 **Pattern: setState Without Mounted Check**
-- Code: `setState()` called in async callbacks without checking `mounted`
-- Risk: `setState() called after dispose()` errors and crashes
-- Detection: Look for `async` functions calling `setState`
-- Fix: Add `if (!mounted) return;` before `setState` in async callbacks
+- Code: setState() called in async callbacks without checking mounted
+- Risk: setState() called after dispose() errors and crashes
+- Detection: Look for async functions calling setState
+- Fix: Add if (!mounted) return; before setState in async callbacks
 
 **Pattern: State Modifications After Disposal**
 - Code: Updating state variables after widget disposed
 - Risk: Memory leaks and unexpected behavior
-- Fix: Check `mounted` or cancel operations in `dispose`
+- Fix: Check mounted or cancel operations in dispose
 
 #### Memory Leaks
 
 **Resources That Must Be Disposed:**
-- `TextEditingController`
-- `AnimationController`
-- `ScrollController`
-- `TabController`
-- `PageController`
-- `FocusNode`
-- `StreamSubscription`
-- `Timer`
-- Any class where `addListener()` was called
+- TextEditingController
+- AnimationController
+- ScrollController
+- TabController
+- PageController
+- FocusNode
+- StreamSubscription
+- Timer
+- Any class where addListener() was called
 
 **Detection Pattern:**
-- Look for controller/subscription creation in class fields or `initState`
-- Verify corresponding `dispose()` call exists
-- Even if `dispose` exists, check ALL resources are disposed
+- Look for controller/subscription creation in class fields or initState
+- Verify corresponding dispose() call exists
+- Even if dispose exists, check ALL resources are disposed
 
-**Important:** If code adds new controllers/streams, must verify disposal even if `dispose` method already exists but unchanged.
+**Important:** If code adds new controllers/streams, must verify disposal even if dispose method already exists but unchanged.
 
 #### Logic Errors
 
 **Incorrect Conditional Logic:**
-- `||` vs `&&` confusion causing always-true/false conditions
+- || vs && confusion causing always-true/false conditions
 - Missing null checks in compound conditions
 - Negation errors
 
@@ -94,11 +94,11 @@ Issues causing logic bugs and maintainability problems.
 #### Collection Equality Issues
 
 **Pattern: Using == on Collections**
-- Code: `list1 == list2`, `map1 == map2`, `set1 == set2`
+- Code: list1 == list2, map1 == map2, set1 == set2
 - Problem: Dart uses reference equality, not deep equality
 - Result: Always false even with identical contents
-- Fix: Use `package:collection` - `ListEquality().equals()`, `MapEquality().equals()`, `DeepCollectionEquality().equals()`
-- Exception: `const` collections (same instance, comparison works)
+- Fix: Use package:collection - ListEquality().equals(), MapEquality().equals(), DeepCollectionEquality().equals()
+- Exception: const collections (same instance, comparison works)
 
 #### Code Complexity
 
@@ -112,7 +112,7 @@ Issues causing logic bugs and maintainability problems.
 
 #### Bloc Anti-Patterns
 
-**Only check when `flutter_bloc` or `bloc` in dependencies.**
+**Only check when flutter_bloc or bloc in dependencies.**
 
 **Public Fields in BLoC:**
 - Pattern: Non-private fields in Bloc classes
@@ -122,51 +122,51 @@ Issues causing logic bugs and maintainability problems.
 **Public Methods in BLoC:**
 - Pattern: Public methods that modify state
 - Problem: BLoCs should only respond to events
-- Fix: Create events and use `add()` instead
+- Fix: Create events and use add() instead
 
 **Mutable Events:**
-- Pattern: Event classes without `@immutable`, mutable fields
+- Pattern: Event classes without @immutable, mutable fields
 - Problem: Events should be immutable data
-- Fix: Add `@immutable`, make fields `final`, use `const` constructors
+- Fix: Add @immutable, make fields final, use const constructors
 
 **Non-Sealed States:**
-- Pattern: State classes not using `sealed` or `final`
+- Pattern: State classes not using sealed or final
 - Problem: Can't exhaustively pattern match
-- Fix: Use `sealed class` for state base, `final class` for implementations
+- Fix: Use sealed class for state base, final class for implementations
 
 #### Provider Anti-Patterns
 
-**Only check when `provider` in dependencies.**
+**Only check when provider in dependencies.**
 
 **context.read() in Build:**
-- Pattern: `context.read<Provider>()` in build method
+- Pattern: context.read<Provider>() in build method
 - Problem: Won't rebuild when provider changes
-- Fix: Use `context.watch<Provider>()` for reactive data
+- Fix: Use context.watch<Provider>() for reactive data
 
 **Old Provider Syntax:**
-- Pattern: `Provider.of<Type>(context, listen: true)`
+- Pattern: Provider.of<Type>(context, listen: true)
 - Problem: Outdated, less readable
-- Fix: Use `context.watch<Type>()` or `context.read<Type>()`
+- Fix: Use context.watch<Type>() or context.read<Type>()
 
 **Missing Disposal in ChangeNotifier:**
 - Pattern: ChangeNotifier with controllers/subscriptions but no dispose
 - Problem: Memory leaks
-- Fix: Override `dispose()` and clean up resources
+- Fix: Override dispose() and clean up resources
 
 #### Logic Issues
 
 **Incorrect Operators:**
-- Using `=` instead of `==` in conditions
+- Using = instead of == in conditions
 - Comparing incompatible types
 - Wrong comparison operators
 
 **Missing Edge Cases:**
-- No empty collection checks before `.first`, `.last`
+- No empty collection checks before .first, .last
 - No bounds checking for indices
 - Missing null/empty string validation
 
 **Off-By-One Errors:**
-- Loop conditions with `<=` instead of `<` for length
+- Loop conditions with <= instead of < for length
 - Index calculations off by one
 
 ### P2 - Code Quality (Nice to Have)
@@ -176,14 +176,14 @@ Improvements for maintainability.
 #### Magic Numbers
 
 **Pattern: Hardcoded Numbers Without Context**
-- Example: `if (status == 3)`, `Timer(Duration(seconds: 3600))`
-- Exceptions: 0, 1, -1, and obvious widget dimensions (e.g., `padding: 16`)
+- Example: if (status == 3), Timer(Duration(seconds: 3600))
+- Exceptions: 0, 1, -1, and obvious widget dimensions (e.g., padding: 16)
 - Fix: Define as named constants with descriptive names
 
 #### TODO/FIXME Comments
 
 **Pattern: Markers for Incomplete Work**
-- Comments: `// TODO:`, `// FIXME:`, `// HACK:`
+- Comments: // TODO:, // FIXME:, // HACK:
 - Significance: Indicates areas needing attention before merge
 - Action: Track and address or convert to issues
 
@@ -203,7 +203,7 @@ Improvements for maintainability.
 
 ### Bloc Pattern Detection
 
-**Trigger:** `flutter_bloc` or `bloc` in `pubspec.yaml`
+**Trigger:** flutter_bloc or bloc in pubspec.yaml
 
 **Key Principles:**
 - State is immutable and sealed
@@ -235,12 +235,12 @@ final class LoadUser extends UserEvent {
 
 ### Provider Pattern Detection
 
-**Trigger:** `provider` in `pubspec.yaml`
+**Trigger:** provider in pubspec.yaml
 
 **Key Principles:**
-- Use `context.watch()` for reactive rebuilds
-- Use `context.read()` only for one-time reads (not in build)
-- Use `context.select()` for performance (rebuild only on specific changes)
+- Use context.watch() for reactive rebuilds
+- Use context.read() only for one-time reads (not in build)
+- Use context.select() for performance (rebuild only on specific changes)
 - Always dispose resources in ChangeNotifier
 
 **Good Patterns:**
@@ -264,7 +264,7 @@ final name = context.select((User user) => user.name);
 - Focus on logic errors, not style
 
 **Generated Code:**
-- Files matching `*.g.dart`, `*.freezed.dart`, `*.gr.dart`
+- Files matching *.g.dart, *.freezed.dart, *.gr.dart
 - Skip entirely - will be regenerated
 
 **Intentional Patterns:**
@@ -357,3 +357,4 @@ final name = context.select((User user) => user.name);
 For detailed explanations of each check, see [reference.md](reference.md).
 
 For code examples showing good vs bad patterns, see [examples.md](examples.md).
+

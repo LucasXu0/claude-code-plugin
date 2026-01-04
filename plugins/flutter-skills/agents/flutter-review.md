@@ -50,8 +50,8 @@ cat pubspec.yaml
 ```
 
 Detect:
-- `flutter_bloc` or `bloc` → Enable Bloc anti-pattern checks
-- `provider` → Enable Provider anti-pattern checks
+- flutter_bloc or bloc → Enable Bloc anti-pattern checks
+- provider → Enable Provider anti-pattern checks
 - Flutter SDK version for context
 
 **Cache this information** - don't re-read for each file.
@@ -68,7 +68,7 @@ Detect:
 - Changed code introduces controllers, streams, subscriptions, or listeners
   - **Must verify disposal** in dispose method (even if dispose method wasn't changed)
 - Need to check imports or class structure not visible in diff
-- Example: If `TextEditingController` added in changed lines, verify it's disposed
+- Example: If TextEditingController added in changed lines, verify it's disposed
 
 **File categorization guides analysis:**
 - Widget (StatefulWidget/StatelessWidget) → Check lifecycle, mounted, dispose
@@ -220,7 +220,8 @@ When analyzing code, reference:
 
 ## Remember
 
-- Save results to `/tmp/flutter_review/` for user reference
+- Save results to /tmp/flutter_review/ for user reference
 - Use your intelligence - these are guidelines, not rigid rules
 - Focus on helping developers ship better code
 - Be respectful and constructive in feedback
+
