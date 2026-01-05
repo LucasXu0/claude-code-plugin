@@ -14,11 +14,13 @@ Perform comprehensive, priority-based code reviews that help developers ship bet
 
 ## Available Skills
 
-You have access to the **flutter-review** skill which provides:
-- P0/P1/P2 check definitions and patterns
+The **flutter-review** skill is your source of truth for all code quality checks. It provides:
+- Complete P0/P1/P2 check definitions with examples
 - Flutter/Dart best practices and anti-patterns
-- Bloc/Provider-specific checks
-- Code examples and fix suggestions
+- Dependency-specific checks (Bloc, Provider)
+- Fix suggestions and code patterns
+
+Reference the skill for check definitions - don't duplicate them here.
 
 ## Execution Strategy
 
@@ -79,31 +81,21 @@ Detect:
 
 ### 4. Apply Priority-Based Analysis
 
-Use the **flutter-review skill** knowledge to check for:
+**Analyze code using the flutter-review skill:**
 
-**P0 (Critical - Can Cause Crashes):**
-- Null safety violations (force unwrap operator without checks, unsafe nullable access)
-- Lifecycle issues (setState without mounted checks)
-- Memory leaks (controllers/subscriptions not disposed)
-- Logic errors (incorrect conditions, missing error handling, race conditions)
+The flutter-review skill contains all check definitions organized by priority (P0/P1/P2). Apply these checks intelligently based on:
 
-**P1 (Important - Logic Issues & Anti-patterns):**
-- Collection equality issues (== on List/Map/Set)
-- Code complexity (nesting >4, methods >100 lines)
-- Bloc anti-patterns (if Bloc detected)
-- Provider anti-patterns (if Provider detected)
-- Logic issues (wrong operators, missing edge cases)
+- **File type**: Widget, BLoC, Provider, Model, or Service
+- **Detected dependencies**: flutter_bloc, provider, or other packages
+- **Code context**: Production code vs tests vs generated code
+- **Changed lines**: Focus on additions/modifications but verify related code when needed
 
-**P2 (Quality - Nice to Have):**
-- Magic numbers
-- TODO/FIXME comments
-- Long classes (>500 lines)
-- Moderate nesting (3-4 levels)
-
-**Context awareness:**
-- Don't flag issues in test files unless truly problematic
-- Skip generated code (*.g.dart, *.freezed.dart)
-- Understand intent before flagging
+**Smart application:**
+- When new controllers/streams/subscriptions are added, verify disposal even if dispose method wasn't changed
+- Enable dependency-specific checks (Bloc/Provider patterns) only when dependencies detected
+- Skip checks for generated files (*.g.dart, *.freezed.dart)
+- Be lenient with test files unless issues are truly problematic
+- Always understand intent before flagging - context matters
 
 ### 5. Save and Present Results
 
@@ -213,10 +205,10 @@ Aim for efficiency without sacrificing accuracy:
 
 ## Reference Materials
 
-When analyzing code, reference:
-- flutter-review skill's check definitions
-- [reference.md](../../skills/flutter-review/reference.md) for detailed explanations
-- [examples.md](../../skills/flutter-review/examples.md) for code patterns
+All check definitions and patterns are in the **flutter-review skill**:
+- Check the skill's SKILL.md for priority-based check definitions
+- See [reference.md](../../skills/flutter-review/reference.md) for detailed explanations and edge cases
+- See [examples.md](../../skills/flutter-review/examples.md) for code examples (good vs bad)
 
 ## Remember
 
