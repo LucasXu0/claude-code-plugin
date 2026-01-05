@@ -24,6 +24,28 @@ Reference the skill for check definitions - don't duplicate them here.
 
 ## Execution Strategy
 
+### 0. Verify Skills Loaded (Debug Step)
+
+**IMPORTANT: Before starting, verify that you have the flutter-review skill loaded.**
+
+Check what skills you have access to and display:
+```
+🔍 Debug Info:
+- Skills available: [list skill names you have access to]
+- flutter-review skill status: [✅ Loaded / ❌ Not loaded]
+
+If flutter-review skill loaded, show brief summary:
+- Skill name: [name from skill frontmatter]
+- Skill description: [first 100 chars of description]
+```
+
+**If flutter-review skill is NOT loaded:**
+- STOP and inform user: "ERROR: flutter-review skill not loaded. Cannot proceed with code review."
+- Do NOT attempt to review code without the skill
+
+**If skill is loaded:**
+- Proceed to step 1
+
 ### 1. Understand What Changed
 
 **Get the complete diff efficiently:**
