@@ -1,11 +1,22 @@
 ---
 name: flutter-review
 description: Expert knowledge for reviewing Flutter/Dart code including critical bugs, memory leaks, null safety violations, lifecycle issues, Bloc/Provider anti-patterns, collection equality, and code quality patterns. Use when reviewing code, checking PRs, analyzing code quality, or when user mentions bugs, issues, memory leaks, null safety, lifecycle, state management, or code review in Flutter context.
+invocable: true
 ---
 
 # Flutter Code Review
 
+**This skill is directly invocable. See [workflow.md](workflow.md) for the complete 6-step execution strategy.**
+
 Expert knowledge for identifying critical bugs, anti-patterns, and code quality issues in Flutter/Dart code.
+
+## Execution Instructions
+
+When invoked directly (e.g., via /flutter-review command):
+1. Follow the 5-step workflow in [workflow.md](workflow.md)
+2. Apply the priority-based checks defined below
+3. Generate a comprehensive review report
+4. Offer to automatically fix issues found
 
 ## Priority-Based Analysis
 

@@ -1,46 +1,14 @@
+# Flutter Review - Execution Workflow
+
+This workflow provides a 5-step intelligent code review process for Flutter/Dart code analysis, designed for efficiency, accuracy, and actionable feedback.
+
+## Overview
+
+This workflow analyzes Flutter code changes efficiently using git diff, selective file reading, and priority-based analysis (P0/P1/P2). It focuses on catching critical bugs before they reach production while maintaining developer velocity.
+
 ---
-name: flutter-review
-description: Intelligent Flutter code review agent that analyzes code changes for critical bugs, memory leaks, null safety violations, lifecycle issues, and anti-patterns. Provides priority-based analysis (P0/P1/P2) with actionable fixes.
-skills: flutter-review
----
 
-# Flutter Review Agent
-
-You are an intelligent Flutter code review agent specialized in analyzing Flutter/Dart code for quality, safety, and best practices.
-
-## Your Mission
-
-Perform comprehensive, priority-based code reviews that help developers ship better Flutter apps by catching critical bugs before they reach production.
-
-## Available Skills
-
-The **flutter-review** skill is your source of truth for all code quality checks. It provides:
-- Complete P0/P1/P2 check definitions with examples
-- Flutter/Dart best practices and anti-patterns
-- Dependency-specific checks (Bloc, Provider)
-- Fix suggestions and code patterns
-
-Reference the skill for check definitions - don't duplicate them here.
-
-## Execution Strategy
-
-### 0. Verify Skills Loaded (Debug Step)
-
-**IMPORTANT: Always display debug info at the start to confirm the flutter-review skill is loaded.**
-
-Output the following debug information:
-```
-🔍 Debug Info:
-- Agent: flutter-review
-- Skill: flutter-review (P0/P1/P2 check definitions)
-- Status: ✅ Ready to analyze Flutter/Dart code
-```
-
-This confirms the agent has access to priority-based check definitions from the flutter-review skill.
-
-Then proceed to step 1.
-
-### 1. Understand What Changed
+## Step 1: Understand What Changed
 
 **Get the complete diff efficiently:**
 ```bash
@@ -60,7 +28,9 @@ git diff origin/main..HEAD
 Reviewing X Dart files changed on branch {branch_name}
 ```
 
-### 2. Gather Context
+---
+
+## Step 2: Gather Context
 
 **Check dependencies** to enable pattern-specific checks:
 ```bash
@@ -74,7 +44,9 @@ Detect:
 
 **Cache this information** - don't re-read for each file.
 
-### 3. Analyze Code Intelligently
+---
+
+## Step 3: Analyze Code Intelligently
 
 **Primary analysis from git diff:**
 - Focus on lines that were added or modified (marked with + in diff)
@@ -95,7 +67,9 @@ Detect:
 - Model/Entity → Check immutability
 - Service/Repository → Check error handling, async patterns
 
-### 4. Apply Priority-Based Analysis
+---
+
+## Step 4: Apply Priority-Based Analysis
 
 **Analyze code using the flutter-review skill:**
 
@@ -113,7 +87,9 @@ The flutter-review skill contains all check definitions organized by priority (P
 - Be lenient with test files unless issues are truly problematic
 - Always understand intent before flagging - context matters
 
-### 5. Save and Present Results
+---
+
+## Step 5: Save and Present Results
 
 **Create output directory:**
 ```bash
@@ -177,7 +153,9 @@ If 🟢 APPROVED (no P0 or P1):
 - Found {P2} optional suggestions (see report for details)
 - Results saved to: /tmp/flutter_review/{filename}.md
 
-### 6. Offer to Fix Issues
+---
+
+## Step 6: Offer to Fix Issues
 
 **If user agrees to automatic fixes:**
 - Fix P0 issues first, then P1
@@ -185,7 +163,9 @@ If 🟢 APPROVED (no P0 or P1):
 - Show what was changed after each fix
 - Optionally re-run review to verify all fixes
 
-## Key Principles for Your Execution
+---
+
+## Key Principles for Execution
 
 1. **Be Efficient**
    - Single git diff operation (not per-file)
@@ -215,6 +195,8 @@ If 🟢 APPROVED (no P0 or P1):
    - **CRITICAL**: Follow the recommendation guidelines from the flutter-review skill
    - **ALWAYS ask user if they want to fix issues when P0 or P1 exist**
 
+---
+
 ## Performance Guidelines
 
 Aim for efficiency without sacrificing accuracy:
@@ -228,12 +210,7 @@ Aim for efficiency without sacrificing accuracy:
 - Reading every changed file completely (should be selective)
 - Re-reading pubspec.yaml multiple times
 
-## Reference Materials
-
-All check definitions and patterns are in the **flutter-review skill**:
-- Check the skill's SKILL.md for priority-based check definitions
-- See [reference.md](../skills/flutter-review/reference.md) for detailed explanations and edge cases
-- See [examples.md](../skills/flutter-review/examples.md) for code examples (good vs bad)
+---
 
 ## Remember
 
@@ -241,4 +218,3 @@ All check definitions and patterns are in the **flutter-review skill**:
 - Use your intelligence - these are guidelines, not rigid rules
 - Focus on helping developers ship better code
 - Be respectful and constructive in feedback
-

@@ -4,8 +4,13 @@ description: Perform comprehensive Flutter code review with priority-based analy
 
 # Flutter Code Review Command
 
-**IMPORTANT: You MUST use the flutter-review agent for this task.**
+**IMPORTANT: You MUST use the flutter-review skill for this task.**
 
-Invoke the flutter-review agent to perform comprehensive Flutter/Dart code review with priority-based analysis.
+Apply the flutter-review skill to perform comprehensive Flutter/Dart code review with priority-based analysis.
 
-Do not perform the review yourself - delegate to the flutter-review agent.
+The skill contains:
+- Priority-based check definitions (P0/P1/P2)
+- 6-step execution workflow
+- Detailed explanations and code examples
+
+Follow the workflow in skills/flutter-review/workflow.md to execute the review.
