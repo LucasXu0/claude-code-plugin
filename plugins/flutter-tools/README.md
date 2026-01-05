@@ -21,8 +21,8 @@ Comprehensive Flutter/Dart code quality tools for Claude Code, featuring intelli
 
 | Command | Description |
 |---------|-------------|
-| /flutter-skills:flutter-review | Triggers comprehensive code review of Flutter changes with prioritized report |
-| /flutter-skills:flutter-format | Runs complete formatting and cleanup workflow for Flutter projects |
+| /flutter-tools:flutter-review | Triggers comprehensive code review of Flutter changes with prioritized report |
+| /flutter-tools:flutter-format | Runs complete formatting and cleanup workflow for Flutter projects |
 
 ## Installation
 
@@ -33,7 +33,7 @@ Comprehensive Flutter/Dart code quality tools for Claude Code, featuring intelli
 /plugin marketplace add LucasXu0/claude-code-plugin
 
 # Install the plugin
-/plugin install flutter-skills@LucasXu0-flutter-skills
+/plugin install flutter-tools@LucasXu0-flutter-tools
 ```
 
 ### Method 2: Manual Installation
@@ -42,7 +42,7 @@ Comprehensive Flutter/Dart code quality tools for Claude Code, featuring intelli
 # Clone and load directly
 git clone https://github.com/LucasXu0/claude-code-plugin.git
 cd claude-code-plugin
-claude --plugin-dir ./plugins/flutter-skills
+claude --plugin-dir ./plugins/flutter-tools
 ```
 
 ## Usage
@@ -51,7 +51,7 @@ claude --plugin-dir ./plugins/flutter-skills
 
 **Slash command:**
 ```
-/flutter-skills:flutter-review
+/flutter-tools:flutter-review
 ```
 
 **Natural language:**
@@ -80,7 +80,7 @@ Is this code ready to merge?
 
 **Slash command:**
 ```
-/flutter-skills:flutter-format
+/flutter-tools:flutter-format
 ```
 
 **Natural language:**

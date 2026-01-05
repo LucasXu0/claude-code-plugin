@@ -23,8 +23,8 @@ Comprehensive Flutter/Dart code quality tools for Claude Code, featuring intelli
 
 | Command | Description |
 |---------|-------------|
-| /flutter-skills:flutter-review | Triggers comprehensive code review of Flutter changes with prioritized report |
-| /flutter-skills:flutter-format | Runs complete formatting and cleanup workflow for Flutter projects |
+| /flutter-tools:flutter-review | Triggers comprehensive code review of Flutter changes with prioritized report |
+| /flutter-tools:flutter-format | Runs complete formatting and cleanup workflow for Flutter projects |
 
 ## Installation
 
@@ -35,7 +35,7 @@ Comprehensive Flutter/Dart code quality tools for Claude Code, featuring intelli
 /plugin marketplace add LucasXu0/claude-code-plugin
 
 # Install the plugin
-/plugin install flutter-skills@LucasXu0-flutter-skills
+/plugin install flutter-tools@LucasXu0-flutter-tools
 ```
 
 ### Method 2: Manual Installation
@@ -48,7 +48,7 @@ git clone https://github.com/LucasXu0/claude-code-plugin.git
 cd claude-code-plugin
 
 # Start Claude Code with plugin directory
-claude --plugin-dir ./plugins/flutter-skills
+claude --plugin-dir ./plugins/flutter-tools
 ```
 
 ## Usage
@@ -57,7 +57,7 @@ claude --plugin-dir ./plugins/flutter-skills
 
 **Slash command:**
 ```
-/flutter-skills:flutter-review
+/flutter-tools:flutter-review
 ```
 
 **Natural language:**
@@ -86,7 +86,7 @@ Is this code ready to merge?
 
 **Slash command:**
 ```
-/flutter-skills:flutter-format
+/flutter-tools:flutter-format
 ```
 
 **Natural language:**
@@ -129,13 +129,13 @@ Run flutter analyze and fix issues
 - [Claude Code Plugins](https://code.claude.com/docs/en/plugins)
 - [Flutter Best Practices](https://flutter.dev/docs/development/best-practices)
 - [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style)
-- [Detailed Examples](plugins/flutter-skills/skills/flutter-review/examples.md)
-- [Check Reference](plugins/flutter-skills/skills/flutter-review/reference.md)
+- [Detailed Examples](plugins/flutter-tools/skills/flutter-review/examples.md)
+- [Check Reference](plugins/flutter-tools/skills/flutter-review/reference.md)
 
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/LucasXu0/claude-code-plugin/issues)
-- **Changelog**: [CHANGELOG](plugins/flutter-skills/CHANGELOG.md)
+- **Changelog**: [CHANGELOG](plugins/flutter-tools/CHANGELOG.md)
 
 ## License
 

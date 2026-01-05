@@ -11,7 +11,7 @@ This is a Claude Code plugin marketplace repository containing plugins that exte
 ```
 claude-code-plugin/
 ├── plugins/
-│   ├── flutter-skills/          # Flutter/Dart code quality tools
+│   ├── flutter-tools/          # Flutter/Dart code quality tools
 │   │   ├── agents/               # flutter-review agent
 │   │   ├── commands/             # Slash commands
 │   │   └── skills/               # flutter-review, flutter-format
@@ -45,8 +45,8 @@ Each plugin in this repository follows the standard Claude Code plugin structure
 Load a plugin for local testing:
 
 ```bash
-# Load flutter-skills plugin
-claude --plugin-dir ./plugins/flutter-skills
+# Load flutter-tools plugin
+claude --plugin-dir ./plugins/flutter-tools
 
 # Load plugin-development plugin
 claude --plugin-dir ./plugins/plugin-development
@@ -69,11 +69,11 @@ The `.claude-plugin/marketplace.json` file defines the marketplace:
 
 ```json
 {
-  "name": "LucasXu0-flutter-skills",
+  "name": "LucasXu0-flutter-tools",
   "plugins": [
     {
-      "name": "flutter-skills",
-      "source": "./plugins/flutter-skills",
+      "name": "flutter-tools",
+      "source": "./plugins/flutter-tools",
       "category": "developer-tools",
       "tags": ["flutter", "dart", "code-review"]
     }
@@ -90,7 +90,7 @@ Users can install plugins via:
 /plugin marketplace add LucasXu0/claude-code-plugin
 
 # Install specific plugin
-/plugin install flutter-skills@LucasXu0-flutter-skills
+/plugin install flutter-tools@LucasXu0-flutter-tools
 ```
 
 ## Important File Patterns
@@ -148,10 +148,10 @@ Command markdown files (`commands/*.md`) should:
 
 ## Common Workflows
 
-### Updating flutter-skills Plugin
+### Updating flutter-tools Plugin
 
 1. Make changes to plugin files
-2. Test locally: `claude --plugin-dir ./plugins/flutter-skills`
+2. Test locally: `claude --plugin-dir ./plugins/flutter-tools`
 3. Update version in `.claude-plugin/plugin.json`
 4. Update `CHANGELOG.md`
 5. Update marketplace manifest if needed
