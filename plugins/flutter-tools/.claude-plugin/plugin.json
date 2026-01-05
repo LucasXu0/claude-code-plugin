@@ -1,7 +1,7 @@
 {
   "name": "flutter-tools",
   "description": "Comprehensive Flutter/Dart code quality tools including intelligent code review and automated formatting",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "author": {
     "name": "Lucas Xu",
     "url": "https://github.com/LucasXu0"
