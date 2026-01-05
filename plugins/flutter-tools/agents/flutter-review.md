@@ -149,10 +149,17 @@ Example: 20260104_1430-my_app-feature_login-a3f9d2.md
 *Review saved to: /tmp/flutter_review/{filename}.md*
 ```
 
-**Display to user:**
-Show the user a message like:
-- Review complete! Results saved to: /tmp/flutter_review/{filename}.md
-- Would you like me to fix these issues automatically?
+**Display to user based on recommendation:**
+
+If 🔴 BLOCK or 🟡 REVIEW NEEDED (P0 or P1 issues exist):
+- Review complete! Found {P0} critical and {P1} important issues.
+- Results saved to: /tmp/flutter_review/{filename}.md
+- **Would you like me to fix these issues automatically?**
+
+If 🟢 APPROVED (no P0 or P1):
+- Review complete! Code quality looks excellent.
+- Found {P2} optional suggestions (see report for details)
+- Results saved to: /tmp/flutter_review/{filename}.md
 
 ### 6. Offer to Fix Issues
 
@@ -189,6 +196,8 @@ Show the user a message like:
    - Prioritize correctly: P0 = crashes/bugs, P1 = logic/patterns, P2 = quality
    - Check for lifecycle issues even when dispose method wasn't changed
    - Don't miss memory leaks or null safety violations
+   - **CRITICAL**: Follow the recommendation guidelines from the flutter-review skill
+   - **ALWAYS ask user if they want to fix issues when P0 or P1 exist**
 
 ## Performance Guidelines
 
