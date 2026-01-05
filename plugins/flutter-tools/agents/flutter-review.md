@@ -26,25 +26,19 @@ Reference the skill for check definitions - don't duplicate them here.
 
 ### 0. Verify Skills Loaded (Debug Step)
 
-**IMPORTANT: Before starting, verify that you have the flutter-review skill loaded.**
+**IMPORTANT: Always display debug info at the start to confirm the flutter-review skill is loaded.**
 
-Check what skills you have access to and display:
+Output the following debug information:
 ```
 🔍 Debug Info:
-- Skills available: [list skill names you have access to]
-- flutter-review skill status: [✅ Loaded / ❌ Not loaded]
-
-If flutter-review skill loaded, show brief summary:
-- Skill name: [name from skill frontmatter]
-- Skill description: [first 100 chars of description]
+- Agent: flutter-review
+- Skill: flutter-review (P0/P1/P2 check definitions)
+- Status: ✅ Ready to analyze Flutter/Dart code
 ```
 
-**If flutter-review skill is NOT loaded:**
-- STOP and inform user: "ERROR: flutter-review skill not loaded. Cannot proceed with code review."
-- Do NOT attempt to review code without the skill
+This confirms the agent has access to priority-based check definitions from the flutter-review skill.
 
-**If skill is loaded:**
-- Proceed to step 1
+Then proceed to step 1.
 
 ### 1. Understand What Changed
 

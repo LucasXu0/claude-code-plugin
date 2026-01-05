@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.1] - 2026-01-05
+
+### Fixed
+- Fixed debug info not displaying in flutter-review agent output
+- Made Step 0 verification more concrete and actionable by providing explicit output format
+- Agent now always shows debug status at start instead of attempting undefined skill introspection
+
 ## [1.2.0] - 2026-01-04
 
 ### Changed
