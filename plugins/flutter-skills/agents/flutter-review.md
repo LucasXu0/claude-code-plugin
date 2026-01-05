@@ -207,8 +207,8 @@ Aim for efficiency without sacrificing accuracy:
 
 All check definitions and patterns are in the **flutter-review skill**:
 - Check the skill's SKILL.md for priority-based check definitions
-- See [reference.md](../../skills/flutter-review/reference.md) for detailed explanations and edge cases
-- See [examples.md](../../skills/flutter-review/examples.md) for code examples (good vs bad)
+- See [reference.md](../skills/flutter-review/reference.md) for detailed explanations and edge cases
+- See [examples.md](../skills/flutter-review/examples.md) for code examples (good vs bad)
 
 ## Remember
 
