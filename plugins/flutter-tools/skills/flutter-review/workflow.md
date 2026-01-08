@@ -11,11 +11,13 @@ This workflow analyzes Flutter code changes efficiently using git diff, selectiv
 ## Step 1: Understand What Changed
 
 **Get the complete diff efficiently:**
+
 ```bash
 git diff origin/main..HEAD
 ```
 
 **Parse the output to identify:**
+
 - Current branch name
 - List of changed .dart files (count them)
 - Specific changes (additions/deletions) per file
@@ -24,6 +26,7 @@ git diff origin/main..HEAD
 **Early exit:** If no Dart files changed, inform user and exit gracefully.
 
 **Inform user with context:**
+
 ```
 Reviewing X Dart files changed on branch {branch_name}
 ```
@@ -33,11 +36,13 @@ Reviewing X Dart files changed on branch {branch_name}
 ## Step 2: Gather Context
 
 **Check dependencies** to enable pattern-specific checks:
+
 ```bash
 cat pubspec.yaml
 ```
 
 Detect:
+
 - flutter_bloc or bloc → Enable Bloc anti-pattern checks
 - provider → Enable Provider anti-pattern checks
 - Flutter SDK version for context
@@ -49,11 +54,13 @@ Detect:
 ## Step 3: Analyze Code Intelligently
 
 **Primary analysis from git diff:**
+
 - Focus on lines that were added or modified (marked with + in diff)
 - The diff includes surrounding context lines - use them
 - Identify the type of change (new code, modification, deletion)
 
 **Read full files selectively - only when:**
+
 - Diff context is insufficient to understand the logic
 - Changed code introduces controllers, streams, subscriptions, or listeners
   - **Must verify disposal** in dispose method (even if dispose method wasn't changed)
@@ -61,6 +68,7 @@ Detect:
 - Example: If TextEditingController added in changed lines, verify it's disposed
 
 **File categorization guides analysis:**
+
 - Widget (StatefulWidget/StatelessWidget) → Check lifecycle, mounted, dispose
 - BLoC (extends Bloc/Cubit) → Check encapsulation, events, states
 - Provider (extends ChangeNotifier) → Check disposal, context usage
@@ -81,9 +89,10 @@ The flutter-review skill contains all check definitions organized by priority (P
 - **Changed lines**: Focus on additions/modifications but verify related code when needed
 
 **Smart application:**
+
 - When new controllers/streams/subscriptions are added, verify disposal even if dispose method wasn't changed
 - Enable dependency-specific checks (Bloc/Provider patterns) only when dependencies detected
-- Skip checks for generated files (*.g.dart, *.freezed.dart)
+- Skip checks for generated files (_.g.dart, _.freezed.dart)
 - Be lenient with test files unless issues are truly problematic
 - Always understand intent before flagging - context matters
 
@@ -92,6 +101,7 @@ The flutter-review skill contains all check definitions organized by priority (P
 ## Step 5: Save and Present Results
 
 **Create output directory:**
+
 ```bash
 mkdir -p /tmp/flutter_review
 ```
@@ -101,6 +111,7 @@ Pattern: YYYYMMDD_HHmm-{repo-name}-{branch-name}-{6-char-random-id}.md
 Example: 20260104_1430-my_app-feature_login-a3f9d2.md
 
 **Report structure:**
+
 ```markdown
 # Flutter Code Review
 
@@ -114,41 +125,47 @@ Example: 20260104_1430-my_app-feature_login-a3f9d2.md
 
 ## Summary
 
-| Priority | Count | Status |
-|----------|-------|--------|
-| 🚨 Critical (P0) | {count} | {✅ Pass / ❌ Must Fix} |
+| Priority          | Count   | Status                     |
+| ----------------- | ------- | -------------------------- |
+| 🚨 Critical (P0)  | {count} | {✅ Pass / ❌ Must Fix}    |
 | ⚠️ Important (P1) | {count} | {✅ Pass / ⚡ Recommended} |
-| 💡 Quality (P2) | {count} | {✅ Pass / 💬 Optional} |
+| 💡 Quality (P2)   | {count} | {✅ Pass / 💬 Optional}    |
 
 **Recommendation**: {🔴 BLOCK / 🟡 REVIEW NEEDED / 🟢 APPROVED}
 
 ---
 
 ## 🚨 Critical Issues (Must Fix)
+
 [P0 issues with file:line, problem, current code, fixed code]
 
 ## ⚠️ Important Issues (Recommended)
+
 [P1 issues - use table format if >3 issues, detailed format if ≤3]
 
 ## 💡 Code Quality Suggestions
+
 [P2 issues grouped by category]
 
 ## Next Steps
+
 [Clear actions based on findings]
 
 ---
 
-*Review saved to: /tmp/flutter_review/{filename}.md*
+_Review saved to: /tmp/flutter_review/{filename}.md_
 ```
 
 **Display to user based on recommendation:**
 
 If 🔴 BLOCK or 🟡 REVIEW NEEDED (P0 or P1 issues exist):
+
 - Review complete! Found {P0} critical and {P1} important issues.
 - Results saved to: /tmp/flutter_review/{filename}.md
 - **Would you like me to fix these issues automatically?**
 
 If 🟢 APPROVED (no P0 or P1):
+
 - Review complete! Code quality looks excellent.
 - Found {P2} optional suggestions (see report for details)
 - Results saved to: /tmp/flutter_review/{filename}.md
@@ -158,6 +175,7 @@ If 🟢 APPROVED (no P0 or P1):
 ## Step 6: Offer to Fix Issues
 
 **If user agrees to automatic fixes:**
+
 - Fix P0 issues first, then P1
 - Fix one file at a time
 - Show what was changed after each fix
@@ -168,22 +186,26 @@ If 🟢 APPROVED (no P0 or P1):
 ## Key Principles for Execution
 
 1. **Be Efficient**
+
    - Single git diff operation (not per-file)
    - Selective file reading (only when needed)
    - Parallel tool calls for independent operations when possible
    - Cache information (don't re-read pubspec.yaml)
 
 2. **Be Intelligent**
+
    - Use your judgment to adapt to the codebase
    - Make smart decisions about when to read full files
    - Understand the difference between patterns and anti-patterns in context
 
 3. **Be Accurate**
+
    - Avoid false positives
    - When uncertain whether something is an issue, skip it or mark as P2
    - Always read surrounding code to determine intent
 
 4. **Be Actionable**
+
    - Every issue must have a clear, copy-paste ready fix
    - Include file path, line number, and code snippets
    - Show both problematic code and corrected version
@@ -206,6 +228,7 @@ Aim for efficiency without sacrificing accuracy:
 - **Large PR** (15+ files, >2000 lines): ~8-25 tool calls
 
 **Red flags indicating inefficient execution:**
+
 - Multiple git diff commands (should only be 1)
 - Reading every changed file completely (should be selective)
 - Re-reading pubspec.yaml multiple times

@@ -126,13 +126,140 @@ void dispose() {
 
 ---
 
+### 4.1 Unsafe Type Casts {#unsafe_type_casts}
+
+**What it detects**: Using the `as` operator to cast types without checking the type first.
+
+**Why it's critical**: Can cause type cast errors at runtime with "type 'X' is not a subtype of type 'Y'" error, crashing the app.
+
+**Pattern to detect**:
+```dart
+// BAD: Direct cast without check
+final user = data as User;
+final name = obj as String;
+```
+
+**Suggested fixes**:
+
+**Option 1: Use pattern matching (Dart 3+)**
+```dart
+// GOOD: Pattern matching with type check
+if (data case User user) {
+  print(user.name);
+}
+```
+
+**Option 2: Check type first with is operator**
+```dart
+// GOOD: Check before cast
+if (obj is String) {
+  final name = obj as String;  // Safe after check
+  print(name);
+}
+```
+
+**Important**: Dart does not have a "safe cast" operator. `as Type?` will still throw if types are incompatible - it only means "cast to nullable Type", not "try cast and return null on failure".
+
+```dart
+// WRONG: This will still throw!
+int value = 0;
+double? d = value as double?;  // Throws: type 'int' is not a subtype of type 'double?'
+```
+
+**When it's acceptable**:
+- Immediately after type check: `if (x is String) { final s = x as String; }`
+- In catch blocks: `} catch (e) { if (e is NetworkError) { final err = e as NetworkError; } }`
+- When type is guaranteed by framework (rare cases with clear documentation)
+
+---
+
+### 4.2 State Modifications After Disposal {#state_after_disposal}
+
+**What it detects**: Modifying widget state or calling methods after the widget has been disposed.
+
+**Why it's critical**: Can cause memory leaks, unexpected behavior, and crashes.
+
+**Patterns to detect**:
+```dart
+// BAD: No cancellation in dispose
+class _MyWidgetState extends State<MyWidget> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        // This will crash if widget disposed
+        _counter++;
+      });
+    });
+  }
+
+  // MISSING: Cancel timer in dispose
+}
+```
+
+```dart
+// BAD: Stream subscription not cancelled
+class _MyWidgetState extends State<MyWidget> {
+  StreamSubscription? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = stream.listen((data) {
+      setState(() => _data = data);  // Crash if disposed
+    });
+  }
+
+  // MISSING: Cancel subscription in dispose
+}
+```
+
+**Suggested fix**:
+```dart
+// GOOD: Cancel operations in dispose
+class _MyWidgetState extends State<MyWidget> {
+  Timer? _timer;
+  StreamSubscription? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (!mounted) return;  // Additional safety
+      setState(() => _counter++);
+    });
+
+    _subscription = stream.listen((data) {
+      if (!mounted) return;  // Additional safety
+      setState(() => _data = data);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();         // Cancel timer
+    _subscription?.cancel();  // Cancel subscription
+    super.dispose();
+  }
+}
+```
+
+**Key principle**: Any async operation that modifies widget state must be:
+1. Cancelled/completed in dispose()
+2. Check `mounted` before calling setState()
+
+---
+
 ### 5. Logic Errors (Critical) {#logic_errors_critical}
 
 **What it detects**: Code logic that will cause crashes or incorrect behavior.
 
 **Examples**:
 
-**Incorrect conditionals**:
+**Incorrect conditionals**: {#logic_errors_conditionals}
 ```dart
 // BAD: Always true
 if (value != null || value.isEmpty) { ... }
@@ -141,7 +268,7 @@ if (value != null || value.isEmpty) { ... }
 if (value != null && value.isEmpty) { ... }
 ```
 
-**Missing error handling**:
+**Missing error handling**: {#missing_error_handling}
 ```dart
 // BAD: No error handling
 final response = await http.get(url);
@@ -160,7 +287,7 @@ try {
 }
 ```
 
-**Infinite loops**:
+**Infinite loops**: {#infinite_loops}
 ```dart
 // BAD: No termination condition
 while (true) {
@@ -174,7 +301,7 @@ while (i < 10) {
 }
 ```
 
-**Race conditions**:
+**Race conditions**: {#race_conditions}
 ```dart
 // BAD: Multiple async operations modifying same state
 void loadData() async {
@@ -185,6 +312,93 @@ void loadData() async {
   setState(() => _data = data2); // Overwrites data1
 }
 ```
+
+---
+
+### 6. bloc_missing_initial_state {#bloc_missing_initial_state}
+
+**What it detects**: BlocConsumer or BlocListener that updates widget state in the listener callback, but doesn't initialize that state from the bloc's current state in initState().
+
+**Why it's critical**: The listener callback only fires on state *changes*, not on the initial state. If the bloc already has state before the widget is created, the listener never runs and widget state remains uninitialized, causing incorrect UI display (empty text fields, wrong values, etc.).
+
+**Pattern to detect**:
+```dart
+// BAD - Initial state missed
+class _MyWidgetState extends State<MyWidget> {
+  final textController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<MyBloc, MyState>(
+      listener: (context, state) {
+        // This only fires on CHANGES, not initial state
+        if (textController.text != state.name) {
+          textController.text = state.name;
+        }
+      },
+      builder: (context, state) {
+        return TextField(controller: textController);
+      },
+    );
+  }
+
+  // MISSING: initState() to set initial value
+}
+```
+
+**Why it happens**:
+1. Bloc is created/provided higher in the widget tree
+2. Bloc emits initial state before this widget is built
+3. Widget subscribes to bloc with BlocConsumer
+4. Since the state hasn't *changed* (it was just the initial emit), listener never fires
+5. Widget state (textController.text) remains at default value (empty string)
+
+**Suggested fix**:
+```dart
+// GOOD - Initial state captured
+class _MyWidgetState extends State<MyWidget> {
+  final textController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Capture initial state from bloc
+    final initialState = context.read<MyBloc>().state;
+    textController.text = initialState.name;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<MyBloc, MyState>(
+      listener: (context, state) {
+        // Now handles subsequent changes
+        if (textController.text != state.name) {
+          textController.text = state.name;
+        }
+      },
+      builder: (context, state) {
+        return TextField(controller: textController);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
+  }
+}
+```
+
+**When to flag**:
+- BlocConsumer or BlocListener has a listener that modifies widget state
+- Widget state (TextEditingController, ScrollController, local variables) is not initialized in initState()
+- The state being listened to could exist before widget creation
+
+**When NOT to flag**:
+- Listener only shows dialogs/snackbars (no state sync)
+- Widget state is only set from user input, not bloc state
+- Bloc is guaranteed to be created after widget (rare)
 
 ---
 
@@ -325,39 +539,69 @@ Widget _buildFooter() { /* 8 lines */ }
 
 ### 3.2 Multiple Widgets Per File {#multiple_widgets_per_file}
 
-**What it detects**: Multiple top-level widget class definitions in the same file.
+**What it detects**: Multiple widget class definitions in the same file.
 
-**Why it's important**: Reduces code organization, makes widgets harder to find and reuse, and violates single-file-single-widget convention.
+**Why it's important**:
+- Reduces code organization and makes widgets harder to find
+- Prevents independent testing of individual widgets
+- Reduces reusability across the codebase
+- Violates single-responsibility and single-file-single-widget convention
+- Makes code reviews harder (changes to different widgets mixed in one file)
 
 **Pattern to detect**:
 ```dart
-// user_profile.dart
+// user_profile.dart - BAD: Multiple widgets in one file
 class UserProfile extends StatelessWidget { ... }
 class UserCard extends StatelessWidget { ... }       // Should be in user_card.dart
-class UserAvatar extends StatelessWidget { ... }     // Should be in user_avatar.dart
+class _UserAvatar extends StatelessWidget { ... }    // Should be in user_avatar.dart (even private)
+class _HeaderSection extends StatefulWidget { ... }  // Should be in header_section.dart (even private)
 ```
 
-**When acceptable**:
-- Small private helper widgets used only within the parent widget
-- Private class with underscore prefix: class _HelperWidget
+**No exceptions**:
+- Even private widgets with underscore prefix (`_Widget`) must be extracted
+- Even "small" helper widgets (< 30 lines) must be in separate files
+- StatefulWidget state classes (`_MyWidgetState`) are the ONLY acceptable additional class
+
+**Acceptable**: Only the State class for a StatefulWidget:
+```dart
+// my_widget.dart - GOOD: Only widget and its state
+class MyWidget extends StatefulWidget {
+  @override
+  State<MyWidget> createState() => _MyWidgetState();
+}
+
+// This is the ONLY acceptable additional class
+class _MyWidgetState extends State<MyWidget> {
+  @override
+  Widget build(BuildContext context) { ... }
+}
+```
 
 **Suggested fix**:
 ```dart
-// user_profile.dart
+// user_profile.dart - GOOD: Only one widget
 class UserProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        UserCard(...),    // Imported from user_card.dart
-        UserAvatar(...),  // Imported from user_avatar.dart
+        UserCard(...),       // Imported from user_card.dart
+        UserAvatar(...),     // Imported from user_avatar.dart
+        HeaderSection(...),  // Imported from header_section.dart
       ],
     );
   }
 }
 
-// Private helper is OK in same file
-class _ProfileHeader extends StatelessWidget { ... }
+// user_card.dart - Separate file for each widget
+class UserCard extends StatelessWidget { ... }
+
+// user_avatar.dart - Even if small or private in origin
+class UserAvatar extends StatelessWidget { ... }
+
+// header_section.dart - Even if it was private before
+class HeaderSection extends StatefulWidget { ... }
+class _HeaderSectionState extends State<HeaderSection> { ... }  // State class OK here
 ```
 
 ---

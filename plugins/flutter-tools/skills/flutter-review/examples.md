@@ -945,12 +945,36 @@ class UserBio extends StatelessWidget {
     return Text(user.bio);
   }
 }
+
+// BAD: Private widget also not allowed in same file
+class _ProfileHeader extends StatelessWidget {
+  final User user;
+
+  const _ProfileHeader(this.user);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.person),
+        Text(user.name),
+      ],
+    );
+  }
+}
 ```
+
+**Why ALL widgets must be extracted (no exceptions):**
+- **Testability**: Cannot unit test `_ProfileHeader` independently without creating `UserProfile`
+- **Reusability**: Private widgets become impossible to reuse in other files
+- **Code Reviews**: Changes to different widgets get mixed in same file diff
+- **Organization**: Harder to find and navigate to specific widget implementations
+- **Convention**: One-widget-per-file is Flutter best practice for consistency
 
 #### ✅ Good Examples
 
 ```dart
-// user_profile.dart - GOOD: One main widget per file
+// user_profile.dart - GOOD: Only one widget per file
 class UserProfile extends StatelessWidget {
   final User user;
 
@@ -960,6 +984,7 @@ class UserProfile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        ProfileHeader(user),   // Imported from profile_header.dart
         UserCard(user),        // Imported from user_card.dart
         UserAvatar(user),      // Imported from user_avatar.dart
         UserBio(user),         // Imported from user_bio.dart
@@ -968,11 +993,11 @@ class UserProfile extends StatelessWidget {
   }
 }
 
-// GOOD: Private helper widget in same file
-class _ProfileHeader extends StatelessWidget {
+// profile_header.dart - GOOD: Even "helper" widgets in separate files
+class ProfileHeader extends StatelessWidget {
   final User user;
 
-  const _ProfileHeader(this.user);
+  const ProfileHeader(this.user);
 
   @override
   Widget build(BuildContext context) {
