@@ -16,14 +16,40 @@ This document provides in-depth explanations of all checks performed by the Flut
 - function call with exclamation mark
 
 **When it's acceptable**:
-- Immediately after an explicit null check: `if (x != null) { x!.method(); }`
-- After type check: `if (x is String) { x.length; }`
+- After type check with type promotion: `if (x is String) { x.length; }`
 
-**Suggested fixes**:
+**Preferred null-checking pattern**:
+
+Extract nullable properties to local variables BEFORE checking:
+```dart
+// PREFERRED: Extract to local variable
+final userId = widget.userId;
+if (userId == null) {
+  return;
+}
+// userId is now non-null, no ! needed
+final user = await userRepository.getUser(userId);
+```
+
+**Anti-pattern to avoid**:
+```dart
+// BAD: Check widget property then force unwrap later
+if (widget.userId == null) {
+  return;
+}
+final user = await userRepository.getUser(widget.userId!); // Still uses !
+```
+
+**Why this pattern is better**:
+1. Type promotion - variable becomes non-null after check
+2. No force unwrap operator needed
+3. More readable and maintainable
+4. Safer - compiler enforces null safety
+
+**Other suggested fixes**:
 1. Use null-aware operator: `variable?.property`
 2. Use null coalescing: `variable ?? defaultValue`
-3. Add explicit null check before usage
-4. Use pattern matching: `if (variable case final value?) { ... }`
+3. Use pattern matching: `if (variable case final value?) { ... }`
 
 ---
 
@@ -399,6 +425,177 @@ class _MyWidgetState extends State<MyWidget> {
 - Listener only shows dialogs/snackbars (no state sync)
 - Widget state is only set from user input, not bloc state
 - Bloc is guaranteed to be created after widget (rare)
+
+---
+
+### 7. text_overflow_flex {#text_overflow_flex}
+
+**What it detects**: Text widgets inside Row/Column without proper constraints or overflow handling.
+
+**Why it's critical**: Causes RenderFlex overflow errors showing red/yellow stripes, making UI look broken and potentially unusable. This is a common Flutter layout bug that directly impacts user experience.
+
+**Pattern to detect**:
+- Text widget as direct child of Row/Column (or nested within non-constraining widgets like GestureDetector, Container without width)
+- No Flexible or Expanded wrapper around Text or its parent
+- No overflow parameter specified on Text
+- Long or dynamic text content that could exceed available space
+
+**Common scenarios**:
+1. User names, emails, or dynamic content in rows
+2. Title text alongside icons/buttons in rows
+3. List items with text and trailing widgets
+4. Headers with text and action buttons
+5. Chat messages or notifications with variable-length text
+
+**Why it happens**:
+- Flutter's Row/Column don't automatically constrain children
+- Text widget defaults to taking as much space as needed for content
+- Without constraints, Text tries to render full content width
+- Results in RenderFlex overflow error when text width exceeds available space
+
+**Suggested fixes**:
+
+**Option 1: Wrap with Flexible (preferred for most cases)**
+```dart
+Row(
+  children: [
+    Icon(Icons.person),
+    Flexible(
+      child: Text(
+        userName,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+  ],
+)
+```
+- Allows text to take available space
+- Works well when text should share space with other widgets
+- Automatically constrains text width
+- Can use `flex` parameter to control relative sizing
+
+**Option 2: Add overflow property with Expanded**
+```dart
+Row(
+  children: [
+    Icon(Icons.person),
+    Expanded(
+      child: Text(
+        userName,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      ),
+    ),
+  ],
+)
+```
+- Use when text should take all remaining space
+- Good for main content in the row
+- Expanded is equivalent to Flexible(flex: 1, fit: FlexFit.tight)
+
+**Option 3: Add explicit width constraints**
+```dart
+Row(
+  children: [
+    Icon(Icons.person),
+    Container(
+      width: 200,
+      child: Text(
+        userName,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+  ],
+)
+```
+- Use when you have specific width requirements
+- Less flexible for different screen sizes
+
+**Best practice**: Combine Flexible/Expanded + overflow parameter for most robust solution.
+
+**Overflow options**:
+- `TextOverflow.ellipsis` - Shows "..." at truncation point (most common)
+- `TextOverflow.fade` - Fades out text at edge
+- `TextOverflow.clip` - Hard cut at boundary
+- `TextOverflow.visible` - Allows overflow (usually not desired)
+
+**Example from real bug fix**:
+```dart
+// BAD - Text will overflow if name is long
+Row(
+  children: [
+    Icon(Icons.mic),
+    HSpace(theme.spacing.m),
+    AFPopover(
+      child: GestureDetector(
+        onTap: () {},
+        child: Text(widget.speakerInfo.name), // Can overflow!
+      ),
+    ),
+  ],
+)
+
+// GOOD - Wrapped with Flexible and overflow handling
+Row(
+  children: [
+    Icon(Icons.mic),
+    HSpace(theme.spacing.m),
+    Flexible(
+      child: AFPopover(
+        child: GestureDetector(
+          onTap: () {},
+          child: Text(
+            widget.speakerInfo.name,
+            overflow: TextOverflow.ellipsis, // Handles long text
+          ),
+        ),
+      ),
+    ),
+  ],
+)
+```
+
+**When to flag**:
+- Text widget inside Row/Column without Flexible/Expanded
+- No overflow parameter specified on Text
+- Text content could be dynamic/user-generated (usernames, emails, messages)
+- Text shares row/column with other fixed-width widgets
+- Text is nested in non-constraining widgets (GestureDetector, Padding, Container without width)
+
+**When NOT to flag**:
+- Text already wrapped in Flexible/Expanded (check parent tree)
+- Text already has overflow parameter set
+- Text is const with known short length (e.g., "Online", "Settings")
+- Row/Column is inside ScrollView with horizontal scroll enabled
+- Text is in a Container with explicit width constraint
+- Text uses maxLines with overflow handling
+
+**Detection examples**:
+```dart
+// FLAG: Direct Text in Row
+Row(children: [Icon(Icons.person), Text(userName)])
+
+// FLAG: Nested in non-constraining widget
+Row(children: [Icon(Icons.person), GestureDetector(child: Text(userName))])
+
+// FLAG: Has overflow but no Flexible
+Row(children: [Icon(Icons.person), Text(userName, overflow: TextOverflow.ellipsis)])
+
+// DON'T FLAG: Already has Flexible
+Row(children: [Icon(Icons.person), Flexible(child: Text(userName))])
+
+// DON'T FLAG: Has both Flexible and overflow
+Row(children: [Icon(Icons.person), Flexible(child: Text(userName, overflow: TextOverflow.ellipsis))])
+
+// DON'T FLAG: Const short text
+Row(children: [Icon(Icons.circle), Text('Online')])
+```
+
+**Additional considerations**:
+- Also applies to Column widgets with similar patterns
+- Check nested structures - Flexible might be several levels up
+- Consider using SizedBox with width for consistent sizing
+- Remember: Spacer() takes remaining space, so text after Spacer needs constraints too
 
 ---
 
@@ -873,6 +1070,152 @@ const int secondsInHour = 3600;
 - `// HACK: ...`
 
 **Why track**: Indicates areas needing attention before merge.
+
+---
+
+### 2.1 Function Ordering {#function_ordering}
+
+**What it detects**: Private methods (starting with `_`) placed before public methods in a class.
+
+**Why it matters**: Code readability and maintainability. Public methods form the API of a class and should be easy to find at the top. Private implementation details should follow after.
+
+**Pattern to detect**:
+```dart
+class UserService {
+  // BAD: Private methods first
+  String _formatName(String name) { ... }
+
+  Future<void> _validateUser(User user) { ... }
+
+  // Public methods buried below
+  Future<User> getUser(String id) { ... }
+
+  void updateUser(User user) { ... }
+}
+```
+
+**Suggested fix**:
+```dart
+class UserService {
+  // GOOD: Public methods first (the public API)
+  Future<User> getUser(String id) {
+    // Uses private helper
+    return _fetchAndValidate(id);
+  }
+
+  void updateUser(User user) {
+    final formatted = _formatUser(user);
+    // ...
+  }
+
+  // Private implementation details after
+  Future<User> _fetchAndValidate(String id) { ... }
+
+  User _formatUser(User user) { ... }
+}
+```
+
+**Benefits of proper ordering**:
+1. **Easier to understand the class API** - readers see what the class does first
+2. **Better code navigation** - public interface is at the top where you look first
+3. **Follows Flutter/Dart conventions** - matches standard practice in framework code
+4. **Logical flow** - "what" before "how"
+
+**Recommended class member order**:
+1. Static constants
+2. Instance fields (public, then private)
+3. Constructors
+4. Public methods
+5. Private methods
+6. Static methods (public, then private)
+
+**Widget-specific method ordering**:
+
+For StatefulWidget State classes, lifecycle methods have a specific order:
+
+```dart
+class _MyWidgetState extends State<MyWidget> {
+  // 1. Fields
+  final controller = TextEditingController();
+  int _counter = 0;
+
+  // 2. initState - initialization logic
+  @override
+  void initState() {
+    super.initState();
+    // Setup code
+  }
+
+  // 3. Other lifecycle methods (before build)
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(MyWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+  }
+
+  // 4. dispose - cleanup logic
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  // 5. build - UI rendering (after all lifecycle methods)
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+  }
+
+  // 6. Public methods
+  void publicMethod() { ... }
+
+  // 7. Private helper methods
+  void _privateHelper() { ... }
+
+  Widget _buildSection() { ... }
+}
+```
+
+**Bad example** (incorrect order):
+```dart
+class _MyWidgetState extends State<MyWidget> {
+  // BAD: build before initState
+  @override
+  Widget build(BuildContext context) { ... }
+
+  @override
+  void initState() { ... }
+
+  // BAD: didUpdateWidget after build
+  @override
+  void didUpdateWidget(MyWidget oldWidget) { ... }
+
+  // BAD: Private method before dispose
+  Widget _buildHeader() { ... }
+
+  @override
+  void dispose() { ... }
+}
+```
+
+**Why this order matters for widgets**:
+1. **Lifecycle grouping** - All lifecycle methods together before build
+2. **Mental model** - Easy to understand the widget's lifecycle at a glance
+3. **Flutter conventions** - Follows the pattern used in Flutter framework and documentation
+4. **Debugging efficiency** - When issues occur, you check lifecycle methods in order
+
+**Complete widget method priority**:
+1. `initState()` - First lifecycle method called
+2. `didChangeDependencies()` - Called after initState and when dependencies change
+3. `didUpdateWidget()` - When widget configuration changes
+4. `dispose()` - Cleanup
+5. `build()` - The main rendering method (always after lifecycle methods)
+6. Other public methods
+7. Private helper methods (including `_build*` helpers)
 
 ---
 

@@ -23,14 +23,16 @@ When invoked directly (e.g., via /flutter-review command):
 
 ### P0 - Critical (Must Fix Before Merge)
 
-Issues that cause crashes, data loss, or security vulnerabilities.
+Issues that cause crashes, data loss, security vulnerabilities, or visual bugs.
 
 #### Null Safety Violations
 
 **Force Unwrap Without Checks** (variable!, expression!.property)
 
 - Risk: Runtime crash with "Null check operator used on a null value"
-- Fix: Use ?. or ?? operators, explicit null checks, or pattern matching
+- Fix: Extract nullable values to local variables, check for null, then use non-null variable
+- **Preferred Pattern:** Extract property to local variable → check null → use promoted non-null variable
+- **Avoid:** Checking widget.property == null then using widget.property with ! operator
 - → Details: reference.md#avoid_non_null_assertion
 
 **Unsafe Nullable Access**
@@ -100,6 +102,14 @@ TextEditingController, AnimationController, ScrollController, TabController, Pag
 - Problem: Listener callbacks only fire on state changes, not initial state. If bloc emits state before widget creation, initial state is missed
 - Fix: Initialize widget state in initState() from current bloc state, AND have listener for updates
 - → Details: reference.md#bloc_missing_initial_state
+
+#### Text Overflow in Flex Layouts
+
+**Text Without Constraints in Row/Column**
+
+- Risk: RenderFlex overflow errors, visual bugs, unusable UI
+- Fix: Wrap Text in Flexible/Expanded widget AND/OR add overflow handling (TextOverflow.ellipsis)
+- → Details: reference.md#text_overflow_flex
 
 ---
 
@@ -243,6 +253,15 @@ Improvements for maintainability.
 - Action: Track and address before merge
 - → Details: reference.md#todo_comments
 
+#### Function Ordering
+
+**Private Functions After Public Functions**
+
+- Problem: Private functions placed before public ones reduces readability and makes it harder to understand the public API
+- Fix: Move all private methods (starting with _) after public methods
+- Widget-specific order: initState → other lifecycle methods → dispose → build → public methods → private methods
+- → Details: reference.md#function_ordering
+
 #### Long Classes (>500 lines)
 
 **Classes Exceeding 500 Lines**
@@ -308,9 +327,10 @@ Improvements for maintainability.
 
 **Intentional Patterns:**
 
-- Null check immediately before force unwrap
-- Type check before cast
-- Controlled environments after validation
+- Type check before cast (e.g., `if (x is String) { x.length; }`)
+- Controlled environments after validation (e.g., validated user input)
+
+**Note:** Even with null check immediately before force unwrap, prefer extracting to local variable for type promotion instead of using the ! operator.
 
 ### When TO Flag Even If...
 

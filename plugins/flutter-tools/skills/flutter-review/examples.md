@@ -27,6 +27,18 @@ Future<void> loadData() async {
   final data = await fetchData();
   processData(data!.items); // data might be null
 }
+
+// Example 4: Checking widget property then force unwrapping
+void _loadUserData() async {
+  if (widget.userId == null) {
+    return;
+  }
+
+  final user = await userRepository.getUser(widget.userId!); // Still uses force unwrap
+  setState(() {
+    _userData = user;
+  });
+}
 ```
 
 #### ✅ Good Examples
@@ -59,6 +71,42 @@ Future<void> loadData() async {
 Object? value = getValue();
 if (value is String) {
   print(value.length); // Safe, type checked
+}
+
+// Example 5: Extract to local variables first
+void _loadUserData() async {
+  final userId = widget.userId;
+
+  if (userId == null) {
+    return;
+  }
+
+  // userId is now non-null, no ! needed
+  final user = await userRepository.getUser(userId);
+  setState(() {
+    _userData = user;
+  });
+}
+
+// Example 6: Multiple property checks
+void _navigateToProfile() {
+  final userId = widget.userId;
+  final userName = widget.userName;
+
+  if (userId == null || userName == null) {
+    return;
+  }
+
+  // All variables promoted to non-null
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ProfilePage(
+        userId: userId,
+        userName: userName,
+      ),
+    ),
+  );
 }
 ```
 
@@ -438,6 +486,465 @@ class _DataScreenState extends State<DataScreen> {
 void processList(List<int> items) {
   for (int i = 0; i < items.length; i++) { // <, not <=
     print(items[i]);
+  }
+}
+```
+
+---
+
+### 7. Text Overflow in Flex Layouts
+
+#### ❌ Bad Examples
+
+```dart
+// Example 1: Text in Row without constraints
+class UserListItem extends StatelessWidget {
+  final User user;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.person),
+        SizedBox(width: 8),
+        Text(user.name), // Overflow if name is long!
+        Spacer(),
+        Icon(Icons.arrow_forward),
+      ],
+    );
+  }
+}
+
+// Example 2: Multiple texts in Row
+class EmailHeader extends StatelessWidget {
+  final Email email;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(email.from), // Can overflow
+        SizedBox(width: 16),
+        Text(email.subject), // Can also overflow
+      ],
+    );
+  }
+}
+
+// Example 3: Text with buttons in Row
+class ActionBar extends StatelessWidget {
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ), // Overflow if title is long
+        Spacer(),
+        IconButton(icon: Icon(Icons.edit), onPressed: () {}),
+        IconButton(icon: Icon(Icons.delete), onPressed: () {}),
+      ],
+    );
+  }
+}
+
+// Example 4: Nested widget with text (real bug scenario)
+class SpeakerHeader extends StatelessWidget {
+  final Speaker speaker;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.mic),
+        SizedBox(width: 8),
+        GestureDetector(
+          onTap: () {},
+          child: Text(speaker.name), // Overflow if name is long!
+        ),
+      ],
+    );
+  }
+}
+
+// Example 5: Column with similar issue
+class ProfileInfo extends StatelessWidget {
+  final String bio;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(child: Icon(Icons.person)),
+        SizedBox(width: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Username'),
+            Text(bio), // Overflow if bio is long!
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// Example 6: Text after Spacer without constraints
+class MessageItem extends StatelessWidget {
+  final String message;
+  final String timestamp;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(message), // Can overflow
+        Spacer(),
+        Text(timestamp),
+      ],
+    );
+  }
+}
+
+// Example 7: Deep nesting without constraints
+class NotificationCard extends StatelessWidget {
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.notifications),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: Container(
+            decoration: BoxDecoration(color: Colors.grey[200]),
+            child: Text(title), // Overflow! Nested but no constraints
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Example 8: ListTile-like pattern
+class CustomListTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.folder),
+        SizedBox(width: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title), // Both can overflow
+            Text(subtitle, style: TextStyle(fontSize: 12)),
+          ],
+        ),
+        Icon(Icons.arrow_forward_ios, size: 16),
+      ],
+    );
+  }
+}
+```
+
+#### ✅ Good Examples
+
+```dart
+// Example 1: Wrapped with Flexible
+class UserListItem extends StatelessWidget {
+  final User user;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.person),
+        SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            user.name,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Spacer(),
+        Icon(Icons.arrow_forward),
+      ],
+    );
+  }
+}
+
+// Example 2: Multiple Flexible widgets for fair space distribution
+class EmailHeader extends StatelessWidget {
+  final Email email;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Flexible(
+          flex: 1,
+          child: Text(
+            email.from,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        SizedBox(width: 16),
+        Flexible(
+          flex: 2,
+          child: Text(
+            email.subject,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Example 3: Expanded for main content
+class ActionBar extends StatelessWidget {
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+        IconButton(icon: Icon(Icons.edit), onPressed: () {}),
+        IconButton(icon: Icon(Icons.delete), onPressed: () {}),
+      ],
+    );
+  }
+}
+
+// Example 4: Real bug fix - Flexible with nested widget
+class SpeakerHeader extends StatelessWidget {
+  final Speaker speaker;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.mic),
+        SizedBox(width: 8),
+        Flexible(
+          child: GestureDetector(
+            onTap: () {},
+            child: Text(
+              speaker.name,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Example 5: Column inside Flexible
+class ProfileInfo extends StatelessWidget {
+  final String bio;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(child: Icon(Icons.person)),
+        SizedBox(width: 16),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Username'),
+              Text(
+                bio,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Example 6: Both texts with proper constraints
+class MessageItem extends StatelessWidget {
+  final String message;
+  final String timestamp;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            message,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        SizedBox(width: 8),
+        Text(timestamp), // Fixed-width timestamp is ok
+      ],
+    );
+  }
+}
+
+// Example 7: Deep nesting with Flexible at right level
+class NotificationCard extends StatelessWidget {
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.notifications),
+        Flexible(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Container(
+              decoration: BoxDecoration(color: Colors.grey[200]),
+              child: Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Example 8: ListTile-like pattern fixed
+class CustomListTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.folder),
+        SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ],
+          ),
+        ),
+        Icon(Icons.arrow_forward_ios, size: 16),
+      ],
+    );
+  }
+}
+
+// Example 9: When const text is acceptable (known to be short)
+class StatusIndicator extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.circle, color: Colors.green, size: 12),
+        SizedBox(width: 4),
+        Text('Online'), // OK - const short text, won't overflow
+      ],
+    );
+  }
+}
+
+// Example 10: Different overflow strategies
+class MessagePreview extends StatelessWidget {
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.message),
+        SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            message,
+            overflow: TextOverflow.fade, // Fade effect instead of ellipsis
+            maxLines: 1,
+            softWrap: false,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Example 11: Combining with width constraints
+class ConstrainedText extends StatelessWidget {
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.title),
+        SizedBox(width: 8),
+        Container(
+          width: 200, // Explicit width constraint
+          child: Text(
+            title,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Example 12: Using SizedBox for consistent sizing
+class UserTag extends StatelessWidget {
+  final String username;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.person, size: 16),
+        SizedBox(width: 4),
+        SizedBox(
+          width: 100, // Fixed width
+          child: Text(
+            username,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
   }
 }
 ```
